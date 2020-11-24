@@ -1,0 +1,102 @@
+
+#include <ECE3.h>
+
+uint16_t sensorValues[8];
+
+const int left_nslp_pin=31; // nslp ==> awake & ready for PWM
+const int right_nslp_pin=11;
+const int left_dir_pin=29;
+const int right_dir_pin=30;
+const int left_pwm_pin=40;
+const int right_pwm_pin=39;
+float fusedNum;
+
+const int LED_RF = 41;
+ int leftSpd;
+ int rightSpd;
+
+void setup()
+{
+  ECE3_Init();
+
+  pinMode(left_nslp_pin,OUTPUT);
+  pinMode(left_dir_pin,OUTPUT);
+  pinMode(left_pwm_pin,OUTPUT);
+  pinMode(right_dir_pin,OUTPUT);
+  pinMode(right_pwm_pin,OUTPUT);
+
+  digitalWrite(left_dir_pin,LOW);
+  digitalWrite(left_nslp_pin,HIGH);
+  digitalWrite(right_dir_pin,LOW);
+  digitalWrite(right_nslp_pin,HIGH);
+
+  pinMode(LED_RF, OUTPUT);
+  Serial.begin(9600); // set the data rate in bits per second for serial data transmission
+  delay(2000);
+
+  
+}
+
+
+void loop()
+{
+  // read raw sensor values
+  ECE3_read_IR(sensorValues);
+
+  // print the sensor values as numbers from 0 to 2500, where 0 means maximum reflectance and
+  // 2500 means minimum reflectance
+  for (unsigned char i = 0; i < 8; i++)
+  {
+        if (i == 0) {                           //LEFT
+    sensorValues[i]=(sensorValues[i]-688)*1000/1812;
+ //   Serial.print(sensorValues[i]);
+ //   Serial.print('\t'); // tab to format the raw data into columns in the Serial monitor
+    }
+    else if (i==1){
+    sensorValues[i]=(sensorValues[i]-664)*1000/1836;
+ //   Serial.print(sensorValues[i]);
+ //   Serial.print('\t');
+    }
+    else if (i==2){
+    sensorValues[i]=(sensorValues[i]-641)*1000/1859;
+ //   Serial.print(sensorValues[i]);
+ //   Serial.print('\t');
+    }
+    else if (i==3){
+    sensorValues[i]=(sensorValues[i]-688)*1000/1812;
+ //   Serial.print(sensorValues[i]);
+ //   Serial.print('\t');
+    }
+    else if (i==4){
+    sensorValues[i]=(sensorValues[i]-641)*1000/1859;
+ //   Serial.print(sensorValues[i]);
+ //   Serial.print('\t');
+    }
+    else if (i==5){
+    sensorValues[i]=(sensorValues[i]-759)*1000/1741;
+  //  Serial.print(sensorValues[i]);
+ //   Serial.print('\t');
+    }
+    else if (i==6){
+    sensorValues[i]=(sensorValues[i]-688)*1000/1812;
+  //  Serial.print(sensorValues[i]);
+  //  Serial.print('\t');
+    }
+    else if (i==7){                          //RIGHT
+    sensorValues[i]=(sensorValues[i]-925)*1000/1575;
+ //   Serial.print(sensorValues[i]);
+ //   Serial.print('\t');
+    }
+  }
+  fusedNum = (8*sensorValues[1] + 4*sensorValues[2] + 2*sensorValues[3] + sensorValues[4] - sensorValues[5] - 2*sensorValues[6] - 4*sensorValues[7] - 8*sensorValues[8])/4;
+ // Serial.print(fusedNum);
+ // Serial.println();
+
+     leftSpd = 60-(fusedNum*0.00005);
+     rightSpd = 60+(fusedNum*0.00005);
+
+  analogWrite(left_pwm_pin,leftSpd);
+  analogWrite(right_pwm_pin,rightSpd);
+
+ // delay(100);
+}
