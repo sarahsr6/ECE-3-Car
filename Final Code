@@ -1,0 +1,202 @@
+
+#include <ECE3.h>
+
+uint16_t sensorValues[8];
+
+const int left_nslp_pin=31; // nslp ==> awake & ready for PWM
+const int right_nslp_pin=11;
+const int left_dir_pin=29;
+const int right_dir_pin=30;
+const int left_pwm_pin=40;
+const int right_pwm_pin=39;
+float fusedNum;
+float fusedNumBefore;
+float kd;
+bool state;
+
+const int LED_RF = 41;
+ int leftSpd;
+ int rightSpd;
+
+void setup()
+{
+  ECE3_Init();
+
+  pinMode(left_nslp_pin,OUTPUT);
+  pinMode(right_nslp_pin,OUTPUT);
+  pinMode(left_dir_pin,OUTPUT);
+  pinMode(left_pwm_pin,OUTPUT);
+  pinMode(right_dir_pin,OUTPUT);
+  pinMode(right_pwm_pin,OUTPUT);
+
+  
+
+  fusedNumBefore = 1;
+  state = 1;
+
+  pinMode(LED_RF, OUTPUT);
+  Serial.begin(9600); // set the data rate in bits per second for serial data transmission
+  delay(2000);
+
+  
+}
+
+
+void loop()
+{
+  // read raw sensor values
+  ECE3_read_IR(sensorValues);
+
+ 
+  
+  for (unsigned char i = 0; i < 8; i++)
+  {
+    if (i == 0) {                           //LEFT
+         int k= (sensorValues[i]-688)*1000/1812;
+          if (k<= 0){
+            k=0;
+          }
+    sensorValues[i]=k;
+//    Serial.print(sensorValues[i]);
+//    Serial.print('\t'); // tab to format the raw data into columns in the Serial monitor
+    }
+    
+    else if (i==1){
+      int k = (sensorValues[i]-664)*1000/1836;
+      if (k<= 0){
+         k=0;
+      }
+    sensorValues[i]=k;
+//    Serial.print(sensorValues[i]);
+//    Serial.print('\t');
+    }
+    
+    else if (i==2){
+      int k = (sensorValues[i]-641)*1000/1859;
+      if (k<= 0){
+         k=0;
+      }    
+    sensorValues[i]=k;
+//    Serial.print(sensorValues[i]);
+//    Serial.print('\t');
+    }
+    
+    else if (i==3){
+      int k = (sensorValues[i]-688)*1000/1812;
+      if (k<= 0){
+         k=0;
+      }       
+    sensorValues[i]=k;
+//    Serial.print(sensorValues[i]);
+//    Serial.print('\t');
+    }
+    
+    else if (i==4){
+      int k = (sensorValues[i]-641)*1000/1859;
+      if (k<= 0){
+         k=0;
+      } 
+    sensorValues[i]=k;
+//    Serial.print(sensorValues[i]);
+//    Serial.print('\t');
+    }
+    
+    else if (i==5){
+      int k = (sensorValues[i]-759)*1000/1741;
+      if (k<= 0){
+         k=0;
+      } 
+    sensorValues[i]=k;
+//   Serial.print(sensorValues[i]);
+//    Serial.print('\t');
+    }
+    
+    else if (i==6){
+      int k = (sensorValues[i]-688)*1000/1812;
+      if (k<= 0){
+         k=0;
+      } 
+    sensorValues[i]=k;
+//    Serial.print(sensorValues[i]);
+//    Serial.print('\t');
+    }
+    
+    else if (i==7){  
+      int k = (sensorValues[i]-925)*1000/1575;
+      if (k<= 0){
+         k=0;
+      } 
+    sensorValues[i]=k;
+//    Serial.print(sensorValues[i]);
+//    Serial.print('\t');
+    }
+    
+  }
+
+
+if ( (state == 1) && (sensorValues[0]>800) && (sensorValues[1]>800) && (sensorValues[2]>800) && (sensorValues[3]>800) && (sensorValues[4]>800) && (sensorValues[5]>800) && (sensorValues[6]>800) && (sensorValues[7]>800)){ 
+  digitalWrite(left_dir_pin,HIGH);
+  digitalWrite(left_nslp_pin,HIGH);
+  digitalWrite(right_dir_pin,LOW);
+  digitalWrite(right_nslp_pin,HIGH);
+
+   leftSpd = 50;
+   rightSpd = 50;
+
+  analogWrite(left_pwm_pin,leftSpd);
+  analogWrite(right_pwm_pin,rightSpd);
+
+  delay(1160);
+
+  state = 0;
+
+}
+else if ((state == 0) && (sensorValues[0]>800) && (sensorValues[1]>800) && (sensorValues[2]>800) && (sensorValues[3]>800) && (sensorValues[4]>800) && (sensorValues[5]>800) && (sensorValues[6]>800) && (sensorValues[7]>800)){ 
+   leftSpd = 0;
+   rightSpd = 0;
+
+  analogWrite(left_pwm_pin,leftSpd);
+  analogWrite(right_pwm_pin,rightSpd);
+
+  delay(9000);
+}
+
+  
+  digitalWrite(left_dir_pin,LOW);
+  digitalWrite(left_nslp_pin,HIGH);
+  digitalWrite(right_dir_pin,LOW);
+  digitalWrite(right_nslp_pin,HIGH);
+  
+  fusedNum = (8*sensorValues[1] + 4*sensorValues[2] + 2*sensorValues[3] + sensorValues[4] - sensorValues[5] - 2*sensorValues[6] - 4*sensorValues[7] - 8*sensorValues[8])/4;
+//  Serial.print(fusedNum );
+//  Serial.print('\t');
+//  Serial.println();
+
+ // delay(100);
+
+     kd = 0.3*(fusedNum-fusedNumBefore)/2;
+     leftSpd = 70+(fusedNum*0.08)+kd;
+     rightSpd = 70-(fusedNum*0.08)-kd;
+     
+//  Serial.print(leftSpd);
+//  Serial.print('\t');
+//  Serial.print(rightSpd);
+
+
+  // Here is the issue BELOW: when I commet out the left side the values in command window work perfectly
+  //HOWEVER, right when I turn on the analogWrite for the left side, the numbers go CRAZY and 
+  //the left wheel slows down until it stops 
+  
+  analogWrite(left_pwm_pin,leftSpd);
+  analogWrite(right_pwm_pin,rightSpd);
+
+ 
+  fusedNumBefore = fusedNum;
+
+//Serial.print(kd);
+//Serial.println();
+
+//  delay(100);
+//}
+
+}
