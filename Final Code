@@ -13,6 +13,7 @@ float fusedNum;
 float fusedNumBefore;
 float kd;
 bool state;
+int fix = 0;
 
 const int LED_RF = 41;
  int leftSpd;
@@ -133,20 +134,25 @@ void loop()
     
   }
 
-
-if ( (state == 1) && (sensorValues[0]>800) && (sensorValues[1]>800) && (sensorValues[2]>800) && (sensorValues[3]>800) && (sensorValues[4]>800) && (sensorValues[5]>800) && (sensorValues[6]>800) && (sensorValues[7]>800)){ 
+if ( (fix==0) && (state == 1) && (sensorValues[0]>800) && (sensorValues[1]>800) && (sensorValues[2]>800) && (sensorValues[3]>800) && (sensorValues[4]>800) && (sensorValues[5]>800) && (sensorValues[6]>800) && (sensorValues[7]>800)){ 
+  fix = 1;
+}
+else if ( (fix==1) && (state == 1) && (sensorValues[0]>800) && (sensorValues[1]>800) && (sensorValues[2]>800) && (sensorValues[3]>800) && (sensorValues[4]>800) && (sensorValues[5]>800) && (sensorValues[6]>800) && (sensorValues[7]>800)){ 
+  fix = 2;
+}
+else if ( (fix == 2) && (state == 1) && (sensorValues[0]>800) && (sensorValues[1]>800) && (sensorValues[2]>800) && (sensorValues[3]>800) && (sensorValues[4]>800) && (sensorValues[5]>800) && (sensorValues[6]>800) && (sensorValues[7]>800)){ 
   digitalWrite(left_dir_pin,HIGH);
   digitalWrite(left_nslp_pin,HIGH);
   digitalWrite(right_dir_pin,LOW);
   digitalWrite(right_nslp_pin,HIGH);
 
-   leftSpd = 50;
-   rightSpd = 50;
+   leftSpd = 80;
+   rightSpd = 80;
 
   analogWrite(left_pwm_pin,leftSpd);
   analogWrite(right_pwm_pin,rightSpd);
 
-  delay(1160);
+  delay(760);
 
   state = 0;
 
@@ -158,7 +164,7 @@ else if ((state == 0) && (sensorValues[0]>800) && (sensorValues[1]>800) && (sens
   analogWrite(left_pwm_pin,leftSpd);
   analogWrite(right_pwm_pin,rightSpd);
 
-  delay(9000);
+  delay(90000);
 }
 
   
